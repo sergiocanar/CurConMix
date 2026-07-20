@@ -115,7 +115,7 @@ def valid_fn(valid_loader, model, CFG, criterion, device):
         with torch.no_grad():
             y_preds, _ = model(images)
 
-        loss = criterion(y_preds[:, :100], labels[:, :100])
+        loss = criterion(y_preds[:, :CFG.n_triplet], labels[:, :CFG.n_triplet])
         losses.update(loss.item(), batch_size)
         preds.append(y_preds.sigmoid().to("cpu").numpy())
 
@@ -192,6 +192,11 @@ def apply_self_distillation(fold, train_folds, CFG):
     # Apply self-distillation: Default SD=1
     tri_range = slice(tri0_idx, tri0_idx + target_size)
     sl_range = slice(sl_pred0_idx, sl_pred0_idx + target_size)
+    # Triplet columns start as int64 one-hot; soft-labels are floats, and
+    # recent pandas raises on implicit int64->float upcast via .iloc[:, slice] =,
+    # so cast the target columns to float before assigning.
+    tri_cols = train_folds.columns[tri_range]
+    train_folds[tri_cols] = train_folds[tri_cols].astype(float)
     train_folds.iloc[:, tri_range] = (
         train_folds.iloc[:, tri_range].values * (1 - CFG.SD)
         + train_softs.iloc[:, sl_range].values * CFG.SD

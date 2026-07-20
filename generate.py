@@ -62,7 +62,7 @@ def inference(CFG):
         model = TripletModel(CFG, model_name=CFG.model_name, pretrained=False).to(
                 CFG.device)
         weights_path = os.path.join(CFG.output_dir,f"checkpoints/{CFG.model_name[:8]}_{CFG.target_size}_{CFG.exp}.pth")
-        model.load_state_dict(torch.load(weights_path)["model"])
+        model.load_state_dict(torch.load(weights_path, weights_only=False)["model"])
 
         trn_idx = folds[folds["fold"] == 'train'].index
         test_idx = folds[folds["fold"] == 'test'].index
@@ -114,7 +114,7 @@ def inference(CFG):
             # Load the weights
             weights_path = os.path.join(CFG.output_dir, f"checkpoints/fold{fold}_{CFG.model_name[:8]}_{CFG.target_size}_{CFG.exp}.pth")
             print('weights_path: ', weights_path)
-            model.load_state_dict(torch.load(weights_path)["model"],strict=True)
+            model.load_state_dict(torch.load(weights_path, weights_only=False)["model"],strict=True)
             if CFG.inference:
                 print(f"fold {fold}: Weights loaded successfully")
             else:

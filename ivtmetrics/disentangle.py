@@ -26,9 +26,11 @@ class Disentangle(object):
         call filter a component labels from the inputs labels     
     """
 
-    def __init__(self, url="maps.txt"):
-        self.bank = self.map_file()
-#        self.bank = np.genfromtxt(url, dtype=int, comments='#', delimiter=',', skip_header=0)
+    def __init__(self, url=None):
+        if url:
+            self.bank = np.genfromtxt(url, dtype=int, comments='#', delimiter=',', skip_header=0)
+        else:
+            self.bank = self.map_file()
         
     def decompose(self, inputs, component):
         """ Extract the component labels from the triplets.

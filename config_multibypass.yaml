@@ -4,68 +4,64 @@
         chdir: false
 
     # Paths to read and save data
-    parent_path: data
-    path_csv: dataframes/CholecT45.csv
-    train_path: data/
-    output_dir: outputs
+    parent_path: data/multibypasst40_challenge_trainval
+    path_csv: dataframes/MultiBypassT40.csv
+    train_path: videos_cutmargin512
+    output_dir: outputs_multibypass
 
     phase : false
     cholec80_phase_path : phase_annotations
-    
-    # General Settings 
+
+    # General Settings
     debug: false
     device: cuda:0
-    
+
     # Hyperparameter
     exp: myexp
     teacher_exp: myexp
     pretrained_exp : myexp
-    nworkers: 4 # change this 
+    nworkers: 4 # change this
 
     # Data split
-    n_fold : 5
+    n_fold : 2
     start_n_fold: 0
-    trn_fold: 
+    trn_fold:
     - 0
     - 1
-    - 2
-    - 3
-    - 4
-    
+
     # Target column param
     col0: tri0
-    target_size: 131
+    target_size: 125
     multi: true
 
-    # Triplet component class counts (CholecT45 defaults)
-    n_triplet: 100
-    n_instrument: 6
-    n_verb: 10
+    # Triplet component class counts (MultiBypassT40)
+    n_triplet: 85
+    n_instrument: 12
+    n_verb: 13
     n_target: 15
-    n_null_triplets: 6
-    # Component (i/v/t/iv/it) disentanglement table; null uses ivtmetrics'
-    # built-in CholecT45 table (100 triplets)
-    maps_file: null
+    n_null_triplets: 10
+    # Component (i/v/t/iv/it) disentanglement table for MultiBypassT40's 85 triplets
+    maps_file: ivtmetrics/maps_multibypass.txt
 
     # Directory for precomputed backbone features / cosine-similarity matrices
     # used by the curriculum feature-mixup pretraining dataset
-    feature_dir: data
-    
+    feature_dir: data/multibypasst40_challenge_trainval/features
+
     # Model hyperparams
-    model_name: swin_base_patch4_window7_224 #swin_base_patch4_window7_224   
+    model_name: swin_base_patch4_window7_224 #swin_base_patch4_window7_224
     pretrained: true
-    weight_dir : 
+    weight_dir :
     local_weight : false
 
     # Augmentation params
-    height: 224  
-    width:  224  
+    height: 224
+    width:  224
 
     # Training params
     epochs: 1
     T_0: 21  # CosineAnnealingWarmRestarts
     lr: 2e-4
-    min_lr: 2e-5 #2e-7   30e ->   2e-4(1) -> 2e-5(30)  90 2e-7 
+    min_lr: 2e-5 #2e-7   30e ->   2e-4(1) -> 2e-5(30)  90 2e-7
     batch_size: 64
     valid_batch_size: 64
     weight_decay: 1e-6
@@ -81,12 +77,12 @@
     # Inference
     inference : true
     ensemble : False
-    ensemble_models : 
+    ensemble_models :
     ensemble_avg : False
 
     # Neptune logging
     neplog: false
-    neptune_project: 
+    neptune_project:
     neptune_api_token:
 
     gradient_accumulation_steps: 2
@@ -96,7 +92,7 @@
     loss: 'bce'
     optim: 'adamw'
     pretrained_ssl: False
-    split_selector: 'cholect45-crossval' 
+    split_selector: 'multibypass-2fold'
 
     temp: 0.1
     ssl: False
@@ -104,10 +100,10 @@
 
     ssl_loss : 'supcon'
     method: 'supcon'
-    
+
     shuffle: True
-    
-    ## Supcon Loss hyperparameter 
+
+    ## Supcon Loss hyperparameter
     contrast_mode: 'one'
 
     mixup : False
@@ -115,13 +111,13 @@
     feature_file_name : 'trainset_features_threshold_10.pkl'
     cos_sim_matrix_file_name : 'similarity_matrix.pkl'
 
-    feature_batch : False 
-    feature_mixup : False ## Feature mixup to make difficult synthesize negative samples 
+    feature_batch : False
+    feature_mixup : False ## Feature mixup to make difficult synthesize negative samples
     num_negative_samples : 63
-    Base384 : False 
+    Base384 : False
     tiny_model : False
     base_model : False
-    top_n : 1024     
+    top_n : 1024
 
     evaluate_all : False
     ignore_null : True

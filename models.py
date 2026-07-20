@@ -10,16 +10,12 @@ class TripletModel(nn.Module):
         self.CFG = CFG
         if pretrained:
             print(f'Using default pre-trained weights for initialized fine-tuning model')
-        self.model = timm.create_model(model_name, pretrained=True)
-
-        if hasattr(self.model, 'fc'):
-            n_features = self.model.fc.in_features
-            self.model.fc = nn.Identity()
-        elif hasattr(self.model, 'head'):  
-            n_features = self.model.head.in_features
-            self.model.head = nn.Identity()
-        else:
-            raise AttributeError("The model does not have 'fc' or 'head' attributes.")
+        # num_classes=0 makes timm build the model as a pooled feature extractor
+        # (no classifier head), which is the version-robust way to get flat
+        # (N, num_features) features regardless of how a given architecture's
+        # native head bundles pooling with the final classifier layer.
+        self.model = timm.create_model(model_name, pretrained=True, num_classes=0)
+        n_features = self.model.num_features
         self.head = nn.Linear(n_features, CFG.target_size)
 
     def forward(self, x):
@@ -33,17 +29,9 @@ class supcon_Model(nn.Module):
     def __init__(self, CFG, model_name, pretrained=True):
         super().__init__()
         self.CFG = CFG
-        self.model = timm.create_model(model_name, pretrained=pretrained) 
+        self.model = timm.create_model(model_name, pretrained=pretrained, num_classes=0)
+        n_features = self.model.num_features
 
-        if hasattr(self.model, 'fc'):
-            n_features = self.model.fc.in_features
-            self.model.fc = nn.Identity()
-        elif hasattr(self.model, 'head'):
-            n_features = self.model.head.in_features
-            self.model.head = nn.Identity()
-        else:
-            raise AttributeError("The model does not have 'fc' or 'head' attributes.")
- 
         self.head = torch.nn.Sequential(
              torch.nn.Linear(n_features, 2048),
              nn.BatchNorm1d(2048),
@@ -73,15 +61,8 @@ class FeatureSupConModel(nn.Module):
     def __init__(self, CFG, model_name, pretrained=True):
         super(FeatureSupConModel, self).__init__()
         self.CFG = CFG
-        self.model = timm.create_model(model_name, pretrained=pretrained)
-        if hasattr(self.model, 'fc'):
-            n_features = self.model.fc.in_features
-            self.model.fc = nn.Identity()
-        elif hasattr(self.model, 'head'):
-            n_features = self.model.head.in_features
-            self.model.head = nn.Identity()
-        else:
-            raise AttributeError("The model does not have 'fc' or 'head' attributes.")
+        self.model = timm.create_model(model_name, pretrained=pretrained, num_classes=0)
+        n_features = self.model.num_features
 
         self.head = SupConHead(n_features, 128)
 

@@ -22,8 +22,8 @@ def evaluate(CFG):
     Returns:
         None
     """
-    # Set target size to 100 to evaluate on the triplets only
-    CFG.target_size = 100
+    # Set target size to the triplet count to evaluate on the triplets only
+    CFG.target_size = CFG.n_triplet
 
     # Determine the folder of saved predictions (inference or out-of-folds)
     folder = "predictions" if CFG.inference else "oofs"
@@ -53,9 +53,9 @@ def evaluate(CFG):
                 pred0_idx = df.columns.get_loc("0")
 
                 # Accumulate the predictions
-                preds = preds + df.iloc[:, pred0_idx:pred0_idx + 100].values if preds is not None else df.iloc[:, pred0_idx:pred0_idx + 100].values
+                preds = preds + df.iloc[:, pred0_idx:pred0_idx + CFG.n_triplet].values if preds is not None else df.iloc[:, pred0_idx:pred0_idx + CFG.n_triplet].values
 
-            df.iloc[:, pred0_idx:pred0_idx + 100] = preds
+            df.iloc[:, pred0_idx:pred0_idx + CFG.n_triplet] = preds
             if CFG.ensemble_avg:
                 preds /= num_models
             # Compute the ensemble mAP metric
@@ -69,7 +69,7 @@ def evaluate(CFG):
             print(e)
 
 def evaluate_all(CFG):
-    CFG.target_size = 100
+    CFG.target_size = CFG.n_triplet
 
     folder = "predictions" if CFG.inference else "oofs"
     prediction_dfs = os.listdir(os.path.join(CFG.output_dir, folder))

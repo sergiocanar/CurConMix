@@ -81,7 +81,7 @@ def cholect45_ivtmetrics_mAP(df, CFG):
     # Loop over the 5 folds
     for fold in range(CFG.n_fold):
         # Initialize the ivt metric
-        rec = Recognition(num_class=100)
+        rec = Recognition(num_class=CFG.n_triplet, n_null_classes=CFG.n_null_triplets, maps_file=CFG.maps_file)
 
         # Filter the fold and its corresponding videos
         fold_df = df[df["fold"] == fold]
@@ -93,8 +93,8 @@ def cholect45_ivtmetrics_mAP(df, CFG):
             vid_df = fold_df[fold_df["video"] == v]
 
             rec.update(
-                vid_df.iloc[:, tri0_idx : tri0_idx + 100].values,
-                vid_df.iloc[:, pred0_idx : pred0_idx + 100].values,
+                vid_df.iloc[:, tri0_idx : tri0_idx + CFG.n_triplet].values,
+                vid_df.iloc[:, pred0_idx : pred0_idx + CFG.n_triplet].values,
             )
 
             rec.video_end()
@@ -128,15 +128,15 @@ def cholect45_ivtmetrics_mAP_all(df, CFG):
     classwise_APs = {comp: [] for comp in components}
 
     for fold in tqdm(range(CFG.n_fold)):
-        rec = Recognition(num_class=100, ignore_null=CFG.ignore_null)
+        rec = Recognition(num_class=CFG.n_triplet, ignore_null=CFG.ignore_null, n_null_classes=CFG.n_null_triplets, maps_file=CFG.maps_file)
         fold_df = df[df["fold"] == fold]
         vids = fold_df.video.unique()
 
         for v in vids:
             vid_df = fold_df[fold_df["video"] == v]
             rec.update(
-                vid_df.iloc[:, tri0_idx : tri0_idx + 100].values,
-                vid_df.iloc[:, pred0_idx : pred0_idx + 100].values,
+                vid_df.iloc[:, tri0_idx : tri0_idx + CFG.n_triplet].values,
+                vid_df.iloc[:, pred0_idx : pred0_idx + CFG.n_triplet].values,
             )
             rec.video_end()
 
@@ -181,7 +181,7 @@ def per_epoch_ivtmetrics(fold_df, CFG):
     pred0_idx = int(fold_df.columns.get_loc("0"))
 
     # Initialize the ivt metric
-    rec = Recognition(num_class=100)
+    rec = Recognition(num_class=CFG.n_triplet, n_null_classes=CFG.n_null_triplets, maps_file=CFG.maps_file)
 
     # Get unique videos
     vids = fold_df.video.unique()
@@ -192,8 +192,8 @@ def per_epoch_ivtmetrics(fold_df, CFG):
         vid_df = fold_df[fold_df["video"] == v]
 
         rec.update(
-            vid_df.iloc[:, tri0_idx : tri0_idx + 100].values,
-            vid_df.iloc[:, pred0_idx : pred0_idx + 100].values,
+            vid_df.iloc[:, tri0_idx : tri0_idx + CFG.n_triplet].values,
+            vid_df.iloc[:, pred0_idx : pred0_idx + CFG.n_triplet].values,
         )
         rec.video_end()
 
@@ -216,7 +216,7 @@ def print_training_info(folds, CFG):
     # Create a formatted training info string
     training_info = (
         f"{'Model:':<20} {CFG.model_name}\n"
-        f"{'Multitask:':<20} {False if CFG.target_size==100 else True}\n"
+        f"{'Multitask:':<20} {False if CFG.target_size==CFG.n_triplet else True}\n"
         f"{'Target size:':<20} {CFG.target_size}\n"
         f"{'Self-distillation:':<20} {CFG.distill}\n"
         f"{'N° images used is:':<20} {len(folds)}\n"

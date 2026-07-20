@@ -38,7 +38,7 @@ def extract_features_for_fold(CFG, folds):
     from models import supcon_Model
 
     device = CFG.device
-    feature_dir = r"E:\cholect45_features"
+    feature_dir = CFG.feature_dir
     os.makedirs(feature_dir, exist_ok=True)
 
     # torchvision-style validation transform

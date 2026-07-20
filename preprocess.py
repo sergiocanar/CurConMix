@@ -13,6 +13,10 @@ def split_selector( case='cholect50'):
             4: [42, 29, 60, 27, 65, 75, 22, 49, 12,],
             5: [78, 43, 62, 35, 74,  1, 56,  4, 13,],
         },
+        'multibypass-2fold': {
+            1: ["C1V3", "C1V4", "C1V7", "C2V1", "C2V10", "C2V11", "C2V12", "C2V2"],
+            2: ["C1V1", "C1V5", "C1V6", "C2V14", "C2V3", "C2V4", "C2V5", "C2V6"],
+        },
     }
     return switcher.get(case)
 
@@ -73,10 +77,10 @@ def get_folds(CFG):
     v_index_no = folds.columns.get_loc('v0')
     inst_index_no = folds.columns.get_loc('inst0')
 
-    binary_array_triplet = folds.iloc[:, index_no:index_no + 100].values.astype(int)
-    binary_array_target = folds.iloc[:, t_index_no:t_index_no + 15].values.astype(int)
-    binary_array_verb = folds.iloc[:, v_index_no:v_index_no + 10].values.astype(int)
-    binary_array_inst = folds.iloc[:, inst_index_no:inst_index_no + 6].values.astype(int)
+    binary_array_triplet = folds.iloc[:, index_no:index_no + CFG.n_triplet].values.astype(int)
+    binary_array_target = folds.iloc[:, t_index_no:t_index_no + CFG.n_target].values.astype(int)
+    binary_array_verb = folds.iloc[:, v_index_no:v_index_no + CFG.n_verb].values.astype(int)
+    binary_array_inst = folds.iloc[:, inst_index_no:inst_index_no + CFG.n_instrument].values.astype(int)
     binary_array_inst_target = np.concatenate((binary_array_inst, binary_array_target), axis=1)
     binary_arrary_inst_verb = np.concatenate((binary_array_inst, binary_array_verb), axis=1)
     binary_array_target_verb = np.concatenate((binary_array_target, binary_array_verb), axis=1)
@@ -106,7 +110,8 @@ def get_folds(CFG):
     
     # Assign each video to a fold based on the predefined lists in fold_map
     for fold, video_list in fold_map.items():
-        video_list = [f"VID{vid:02d}" for vid in video_list]
+        if video_list and isinstance(video_list[0], int):
+            video_list = [f"VID{vid:02d}" for vid in video_list]
         if isinstance(fold, int):
             folds.loc[folds["video"].isin(video_list), "fold"] = fold - 1
         else:

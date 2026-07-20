@@ -35,6 +35,7 @@ def train_cross_val(CFG):
     log_folder_dir = os.path.join(CFG.output_dir, CFG.exp)
     os.makedirs(summary_dir, exist_ok=True)
     os.makedirs(log_folder_dir, exist_ok=True)
+    os.makedirs(os.path.join(CFG.output_dir, "checkpoints"), exist_ok=True)
 
     if CFG.debug:
         CFG.epochs = 1
@@ -58,6 +59,7 @@ def train_cross_val(CFG):
     folds = get_folds(CFG)
     print_training_info(folds, CFG)
 
+    valid_folds_temp_all = []
     for fold in range(CFG.start_n_fold, CFG.n_fold):
         if fold not in CFG.trn_fold:
             continue
@@ -72,7 +74,7 @@ def train_cross_val(CFG):
                     f"checkpoints/fold{fold}_{CFG.model_name[:8]}_{CFG.pretrained_exp}.pth"
                 )
                 print(f"Using Pre-trained Checkpoint: {weights_path}")
-                ssl_checkpoint = torch.load(weights_path, map_location=CFG.device)
+                ssl_checkpoint = torch.load(weights_path, map_location=CFG.device, weights_only=False)
                 ssl_state_dict = ssl_checkpoint['model']
                 # Load weights with non-strict mode
                 load_result = model.load_state_dict(ssl_state_dict, strict=False)
@@ -144,9 +146,11 @@ def train_cross_val(CFG):
                     save_checkpoint_path = os.path.join(CFG.output_dir, f"checkpoints/fold{fold}_{CFG.model_name[:8]}_{CFG.target_size}_{CFG.exp}.pth")
                     torch.save({"model": model.state_dict(), "preds": preds}, save_checkpoint_path)
                 print(raw_line.format(epoch, avg_loss, avg_val_loss, cholect45_epoch_CV, (time.time() - epoch_start) / 60 ** 1))
+            valid_folds_temp_all.append(valid_folds_temp)
             del model, train_loader, valid_loader
             torch.cuda.empty_cache()
-            
+
+    valid_folds_temp = pd.concat(valid_folds_temp_all, axis=0, ignore_index=True)
     cholect45_final_CV = cholect45_ivtmetrics_mAP(valid_folds_temp, CFG)
     print(f"CV: Overall mAP: {cholect45_final_CV:.4f}")
 
@@ -227,11 +231,9 @@ def train_cross_val_SSL(CFG):
             
             if (CFG.method=='supcon' or CFG.method=='curriculum_supcon') and CFG.feature_batch and CFG.feature_mixup: ## CurConMix Full Framework for feature-level contrastive learning
                 print('Feature Batch and Feature Mixup during Pre-training')
-                feature_file_name = f'C:/Users/kyuhw/Desktop/work/sd_temporal/baseline_train_mixup/fold{fold}_' + CFG.feature_file_name
-                matrix_file_name = f'C:/Users/kyuhw/Desktop/work/sd_temporal/baseline_train_mixup/fold_{fold}_' + CFG.cos_sim_matrix_file_name
-                # feature_file_name = f'E:/cholect45_features/fold{fold}_' + CFG.feature_file_name
-                # matrix_file_name = f'E:/cholect45_features/fold_{fold}_' + CFG.cos_sim_matrix_file_name
-                
+                feature_file_name = os.path.join(CFG.feature_dir, f'fold{fold}_' + CFG.feature_file_name)
+                matrix_file_name = os.path.join(CFG.feature_dir, f'fold_{fold}_' + CFG.cos_sim_matrix_file_name)
+
                 if CFG.Base384:
                     feature_file_name = f'E:/Surgical/384SwinT_fold{fold}_' + CFG.feature_file_name
                     matrix_file_name = f'E:/Surgical/384SwinT_fold_{fold}_' + CFG.cos_sim_matrix_file_name

@@ -52,12 +52,13 @@ class Recognition(Disentangle):
     topClass(k):
         obtain top-k correctly detected classes      
     """    
-    def __init__(self, num_class=100, ignore_null=False):
-        super(Recognition, self).__init__()
+    def __init__(self, num_class=100, ignore_null=False, n_null_classes=6, maps_file=None):
+        super(Recognition, self).__init__(url=maps_file)
         np.seterr(divide='ignore', invalid='ignore')
         self.num_class = num_class
         self.ignore_null = ignore_null
-        self.reset_global()   
+        self.n_null_classes = n_null_classes
+        self.reset_global()
 
     def resolve_nan(self, classwise):
         classwise[classwise==-0.0] = np.nan
@@ -119,7 +120,7 @@ class Recognition(Disentangle):
             warnings.filterwarnings(action='ignore', message='[info] triplet classes not represented in this test sample will be reported as nan values.')            
             classwise = average_precision_score(targets, predicts, average=None)
             classwise = self.resolve_nan(classwise)
-            if (ignore_null and component=="ivt"): classwise = classwise[:-6]
+            if (ignore_null and component=="ivt"): classwise = classwise[:-self.n_null_classes]
             mean      = np.nanmean(classwise)
         return {"AP":classwise, "mAP":mean}
     
@@ -153,7 +154,7 @@ class Recognition(Disentangle):
             warnings.filterwarnings(action='ignore', message='[info] triplet classes not represented in this test sample will be reported as nan values.')            
             classwise = average_precision_score(targets, predicts, average=None)
             classwise = self.resolve_nan(classwise)
-            if (ignore_null and component=="ivt"): classwise = classwise[:-6]
+            if (ignore_null and component=="ivt"): classwise = classwise[:-self.n_null_classes]
             mean      = np.nanmean(classwise)
         return {"AP":classwise, "mAP":mean}    
     
@@ -191,7 +192,7 @@ class Recognition(Disentangle):
                 video_log.append( classwise.reshape([1,-1]) )
             video_log = np.concatenate(video_log, axis=0)         
             videowise = np.nanmean(video_log, axis=0)
-            if (ignore_null and component=="ivt"): videowise = videowise[:-6]
+            if (ignore_null and component=="ivt"): videowise = videowise[:-self.n_null_classes]
             mean      = np.nanmean(videowise)
         return {"AP":videowise, "mAP":mean}
 
@@ -245,7 +246,7 @@ class Recognition(Disentangle):
                 video_log = np.concatenate(video_log, axis=0)
                 videowise = np.nanmean(video_log, axis=0)
                 if ignore_null and component == "ivt":
-                    videowise = videowise[:-6]
+                    videowise = videowise[:-self.n_null_classes]
                     
                 mean_ap = np.nanmean(videowise)
                 std_ap = np.nanstd(videowise)
