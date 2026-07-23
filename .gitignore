@@ -223,5 +223,7 @@ __marimo__/
 data/
 weights/
 outputs/
-outputs_multibypass/
+outputs_multibypass/checkpoints/
+outputs_multibypass/predictions/
+outputs_multibypass/softlabels/
 outputs_multibypass_dinov3/
